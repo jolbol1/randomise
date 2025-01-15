@@ -15,35 +15,39 @@ import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { TwitterShareButton } from "./TwitterShareButton";
 import { faker } from "@faker-js/faker";
+import { LuckyOptions } from "@/types/types";
 
-function generateRandomString(options: {
-  dictionaryOnly: boolean;
-  includeNumbers: boolean;
-  includeLetters: boolean;
-  wordLength: number;
-}): string {
+function generateRandomString(options: LuckyOptions): string {
   const { dictionaryOnly, includeNumbers, includeLetters, wordLength } =
     options;
 
+  const wordLengthNumber = parseInt(wordLength) || 0;
+
   if (dictionaryOnly) {
-    if (wordLength === 0) {
+    if (wordLengthNumber === 0) {
       return faker.word.sample();
     } else {
-      return faker.word.sample({ length: wordLength });
+      if (wordLengthNumber === 1) {
+        return faker.string.alpha(1);
+      }
+      return faker.word.sample({
+        length: wordLengthNumber,
+        strategy: "closest",
+      });
     }
   }
 
   if (includeLetters && includeNumbers) {
     return faker.string.alphanumeric({
-      length: wordLength || faker.number.int({ min: 1, max: 10 }),
+      length: wordLengthNumber || faker.number.int({ min: 1, max: 10 }),
     });
   } else if (includeLetters) {
     return faker.string.alpha({
-      length: wordLength || faker.number.int({ min: 1, max: 10 }),
+      length: wordLengthNumber || faker.number.int({ min: 1, max: 10 }),
     });
   } else if (includeNumbers) {
     return faker.string.numeric({
-      length: wordLength || faker.number.int({ min: 1, max: 10 }),
+      length: wordLengthNumber || faker.number.int({ min: 1, max: 10 }),
     });
   }
 
@@ -55,13 +59,8 @@ function LuckyOptionsCard({
   options,
   setOptions,
 }: {
-  options: {
-    dictionaryOnly: boolean;
-    includeNumbers: boolean;
-    includeLetters: boolean;
-    wordLength: number;
-  };
-  setOptions: (options: any) => void;
+  options: LuckyOptions;
+  setOptions: (options: LuckyOptions) => void;
 }) {
   return (
     <Card className="w-[300px]">
@@ -124,7 +123,7 @@ function LuckyOptionsCard({
               onChange={(e) =>
                 setOptions({
                   ...options,
-                  wordLength: parseInt(e.target.value) || 0,
+                  wordLength: e.target.value,
                 })
               }
               min="0"
@@ -141,14 +140,15 @@ function LuckyOptionsCard({
 
 export default function LuckyButton() {
   const { toast } = useToast();
-  const [options, setOptions] = useState({
+  const [options, setOptions] = useState<LuckyOptions>({
     dictionaryOnly: true,
     includeNumbers: false,
     includeLetters: true,
-    wordLength: 0,
+    wordLength: "0",
   });
 
   const handleLucky = () => {
+    console.log("OPTIONS", options);
     const randomTerm = generateRandomString(options);
     const url = `https://${encodeURIComponent(randomTerm)}.vercel.app`;
 
@@ -171,7 +171,7 @@ export default function LuckyButton() {
           </p>
           <TwitterShareButton
             url={url}
-            text={`I just discovered this cool site using the Vercel.app search`}
+            text={`I just discovered this cool site using randomise.vercel.app`}
           />
         </div>
       ),
@@ -186,7 +186,7 @@ export default function LuckyButton() {
         variant="default"
         className="bg-blue-500 hover:bg-blue-600 text-white flex-grow"
       >
-        I'm Feeling Lucky
+        I&apos;m Feeling Lucky
       </Button>
       <Popover>
         <PopoverTrigger asChild>
